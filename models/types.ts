@@ -1,0 +1,65 @@
+import type { ObjectId } from "mongodb";
+
+export type Role = "USER" | "OWNER" | "ADMIN";
+
+export type BookingStatus =
+  | "PENDING"        // created by user, awaiting admin final decision
+  | "CONFIRMED"      // admin confirmed
+  | "REJECTED"       // admin rejected
+  | "CANCELLED";     // user/admin cancel
+
+export type OwnerDecision = "APPROVE" | "REJECT" | null;
+
+export type Weekday =
+  | "SUN" | "MON" | "TUE" | "WED" | "THU" | "FRI" | "SAT";
+
+export type OpeningHours = Record<
+  Weekday,
+  { open: string; close: string; closed?: boolean }
+>;
+
+export interface UserDoc {
+  _id: ObjectId;
+  name: string;
+  email: string;
+  passwordHash: string; // for credentials auth
+  role: Role;
+  createdAt: Date;
+}
+
+export interface VenueDoc {
+  _id: ObjectId;
+  ownerId: ObjectId;
+  type: "TURF" | "EVENT_SPACE";
+  name: string;
+  slug: string;
+  description?: string;
+  city?: string;
+  area?: string;
+  address?: string;
+
+  slotDurationMinutes: number; // e.g. 60
+  openingHours: OpeningHours;
+
+  status: "ACTIVE" | "SUSPENDED";
+  createdAt: Date;
+}
+
+export interface BookingDoc {
+  _id: ObjectId;
+  venueId: ObjectId;
+  userId: ObjectId;
+
+  start: Date;
+  end: Date;
+
+  status: BookingStatus;
+
+  ownerDecision: OwnerDecision; // recommendation by owner
+  ownerNote?: string;
+
+  adminNote?: string;
+
+  createdAt: Date;
+  updatedAt: Date;
+}
