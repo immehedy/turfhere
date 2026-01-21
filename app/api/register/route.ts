@@ -13,10 +13,10 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
   }
 
-  const { name, email, password, role } = parsed.data;
+  const { name, phone, email, password, role } = parsed.data;
   const db = await getDb();
 
-  const exists = await db.collection<UserDoc>(collections.users).findOne({ email: email.toLowerCase().trim() });
+  const exists = await db.collection<UserDoc>(collections.users).findOne({ phone: phone });
   if (exists) return NextResponse.json({ error: "Email already registered" }, { status: 409 });
 
   const passwordHash = await hashPassword(password);
@@ -25,6 +25,7 @@ export async function POST(req: Request) {
     _id: new ObjectId(),
     name,
     email: email.toLowerCase().trim(),
+    phone,
     passwordHash,
     role,
     createdAt: new Date(),

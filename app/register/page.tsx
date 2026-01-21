@@ -12,6 +12,7 @@ export default function RegisterPage() {
   const router = useRouter();
 
   const [name, setName] = useState("");
+  const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [role, setRole] = useState<"USER" | "OWNER">("USER");
@@ -26,7 +27,7 @@ export default function RegisterPage() {
 
     const res = await clientFetch<RegisterRes>("/api/register", {
       method: "POST",
-      body: JSON.stringify({ name, email, password, role }),
+      body: JSON.stringify({ name, phone, email, password, role }),
     });
 
     if (!res.ok) {
@@ -36,7 +37,11 @@ export default function RegisterPage() {
     }
 
     // auto sign-in
-    const sign = await signIn("credentials", { email, password, redirect: false });
+    const sign = await signIn("credentials", {
+      email,
+      password,
+      redirect: false,
+    });
     setLoading(false);
 
     if (!sign?.ok) {
@@ -60,6 +65,16 @@ export default function RegisterPage() {
               className="mt-1 w-full border rounded px-3 py-2"
               value={name}
               onChange={(e) => setName(e.target.value)}
+              required
+            />
+          </div>
+          <div>
+            <label className="text-sm">Phone number</label>
+            <input
+              className="mt-1 w-full border rounded px-3 py-2"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              placeholder="01XXXXXXXXX"
               required
             />
           </div>
@@ -91,8 +106,7 @@ export default function RegisterPage() {
             <select
               className="mt-1 w-full border rounded px-3 py-2"
               value={role}
-              onChange={(e) => setRole(e.target.value as any)}
-            >
+              onChange={(e) => setRole(e.target.value as any)}>
               <option value="USER">User (book venues)</option>
               <option value="OWNER">Owner (register turf/event)</option>
             </select>
@@ -102,8 +116,7 @@ export default function RegisterPage() {
 
           <button
             disabled={loading}
-            className="w-full rounded bg-black text-white py-2 disabled:opacity-50"
-          >
+            className="w-full rounded bg-black text-white py-2 disabled:opacity-50">
             {loading ? "Creating..." : "Create account"}
           </button>
         </form>

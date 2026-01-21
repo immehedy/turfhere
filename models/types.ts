@@ -25,7 +25,8 @@ export type VenueStatus = "ACTIVE" | "SUSPENDED";
 export interface UserDoc {
   _id: ObjectId;
   name: string;
-  email: string;
+  email?: string;
+  phone: string;
   passwordHash: string; // for credentials auth
   role: Role;
   createdAt: Date;

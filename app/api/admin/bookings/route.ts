@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { requireSession, getRole, getUserId } from "@/lib/session";
 import { getDb, collections } from "@/lib/db";
 import type { BookingDoc } from "@/models/types";
+import { ObjectId } from "mongodb";
 
 export async function GET() {
   const session = await requireSession();
@@ -25,7 +26,7 @@ export async function GET() {
       ...b,
       _id: b._id.toString(),
       venueId: b.venueId.toString(),
-      userId: b.userId.toString(),
+      userId: userId ? new ObjectId(userId) : undefined,
     })),
   });
 }
