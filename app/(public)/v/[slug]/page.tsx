@@ -52,6 +52,8 @@ export default async function VenuePublicPage({
           <div className="mt-4">
             <VenueBookingClient
               venueId={venue._id}
+              thumbnailUrl={venue.thumbnailUrl}
+              images={venue.images}
               slotDurationMinutes={venue.slotDurationMinutes}
             />
           </div>

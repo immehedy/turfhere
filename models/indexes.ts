@@ -10,4 +10,5 @@ export async function ensureIndexes() {
 
   await db.collection(collections.bookings).createIndex({ venueId: 1, start: 1, end: 1, status: 1 });
   await db.collection(collections.bookings).createIndex({ userId: 1, createdAt: -1 });
+
 }

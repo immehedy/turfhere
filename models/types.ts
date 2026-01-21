@@ -8,7 +8,7 @@ export type BookingStatus =
   | "REJECTED"       // admin rejected
   | "CANCELLED";     // user/admin cancel
 
-export type OwnerDecision = "APPROVE" | "REJECT" | null;
+export type OwnerDecision = "CONFIRMED" | "REJECTED" | "APPROVED" | "CANCELLED" | null;
 
 export type Weekday =
   | "SUN" | "MON" | "TUE" | "WED" | "THU" | "FRI" | "SAT";
@@ -17,6 +17,9 @@ export type OpeningHours = Record<
   Weekday,
   { open: string; close: string; closed?: boolean }
 >;
+
+export type VenueType = "TURF" | "EVENT_SPACE";
+export type VenueStatus = "ACTIVE" | "SUSPENDED";
 
 export interface UserDoc {
   _id: ObjectId;
@@ -30,7 +33,7 @@ export interface UserDoc {
 export interface VenueDoc {
   _id: ObjectId;
   ownerId: ObjectId;
-  type: "TURF" | "EVENT_SPACE";
+  type: VenueType;
   name: string;
   slug: string;
   description?: string;
@@ -38,10 +41,13 @@ export interface VenueDoc {
   area?: string;
   address?: string;
 
+  thumbnailUrl: string;     // required
+  images: string[]; 
+
   slotDurationMinutes: number; // e.g. 60
   openingHours: OpeningHours;
 
-  status: "ACTIVE" | "SUSPENDED";
+  status: VenueStatus;
   createdAt: Date;
 }
 
