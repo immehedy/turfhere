@@ -55,17 +55,25 @@ export interface VenueDoc {
 export interface BookingDoc {
   _id: ObjectId;
   venueId: ObjectId;
-  userId: ObjectId;
-
+  ownerId?: ObjectId;
+  userId?: ObjectId;
+  guest?: { name: string; phone: string } | null;
   start: Date;
   end: Date;
 
   status: BookingStatus;
 
-  ownerDecision: OwnerDecision; // recommendation by owner
+  ownerDecision: OwnerDecision;
   ownerNote?: string;
 
   adminNote?: string;
+  note?: string;
+
+  userSnapshot?: {
+    name?: string;
+    email?: string;
+    phone?: string;
+  };
 
   createdAt: Date;
   updatedAt: Date;

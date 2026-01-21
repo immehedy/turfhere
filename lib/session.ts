@@ -13,3 +13,8 @@ export function getRole(session: any): string | undefined {
 export function getUserId(session: any): string | undefined {
   return session?.user?.id;
 }
+
+export async function getOptionalSession() {
+  return getServerSession(authOptions);
+}
+

@@ -13,11 +13,6 @@ export default function SignInClient() {
 
   const [loading, setLoading] = useState(false);
 
-  async function handleGoogle() {
-    setLoading(true);
-    await signIn("google", { callbackUrl });
-  }
-
   async function handleCredentials(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const fd = new FormData(e.currentTarget);
@@ -43,18 +38,6 @@ export default function SignInClient() {
           Sign in failed. Please try again.
         </p>
       )}
-
-      {/* If you use Google */}
-      <button
-        onClick={handleGoogle}
-        disabled={loading}
-        className="w-full rounded border px-4 py-2 hover:bg-gray-50 disabled:opacity-50"
-        type="button"
-      >
-        Continue with Google
-      </button>
-
-      <div className="text-xs text-gray-500 text-center">or</div>
 
       {/* Credentials sign-in */}
       <form onSubmit={handleCredentials} className="space-y-3">

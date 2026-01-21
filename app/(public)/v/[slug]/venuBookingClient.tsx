@@ -16,6 +16,29 @@ function uniqUrls(urls: string[]) {
   return Array.from(new Set(urls.map((u) => u.trim()).filter(Boolean)));
 }
 
+function normalizePhone(raw: string) {
+  // Very MVP-friendly normalization:
+  // - remove spaces/dashes
+  // - keep leading +
+  const v = raw.trim().replace(/[^\d+]/g, "");
+  return v;
+}
+
+function isValidPhone(raw: string) {
+  // Simple validation:
+  // - allow +8801XXXXXXXXX, 01XXXXXXXXX, or international 8-15 digits
+  const v = normalizePhone(raw);
+  if (!v) return false;
+
+  // Bangladesh common formats
+  if (/^(\+?8801)\d{9}$/.test(v)) return true;
+  if (/^01\d{9}$/.test(v)) return true;
+
+  // generic international
+  const digits = v.replace(/\D/g, "");
+  return digits.length >= 8 && digits.length <= 15;
+}
+
 export default function VenueBookingClient({
   venueId,
   slotDurationMinutes,
@@ -25,13 +48,13 @@ export default function VenueBookingClient({
 }: {
   venueId: string;
   slotDurationMinutes: number;
-
-  // ✅ new
   thumbnailUrl?: string;
   images?: string[];
   venueName?: string;
 }) {
   const { status } = useSession();
+  const isAuthed = status === "authenticated";
+
   const [date, setDate] = useState(() => new Date().toISOString().slice(0, 10));
   const [data, setData] = useState<AvailabilityRes | null>(null);
   const [loading, setLoading] = useState(false);
@@ -39,10 +62,12 @@ export default function VenueBookingClient({
   const [note, setNote] = useState("");
   const [msg, setMsg] = useState<string | null>(null);
 
-  const canBook = status === "authenticated";
+  // ✅ Guest fields
+  const [guestName, setGuestName] = useState("");
+  const [guestPhone, setGuestPhone] = useState("");
+
   const slots = useMemo(() => data?.slots ?? [], [data]);
 
-  // ✅ build gallery: thumbnail first + rest
   const gallery: Img[] = useMemo(() => {
     const all = uniqUrls([thumbnailUrl ?? "", ...(images ?? [])]);
     return all.map((url) => ({ url, isThumb: url === (thumbnailUrl ?? "") }));
@@ -74,14 +99,33 @@ export default function VenueBookingClient({
 
   async function requestBooking(startISO: string, endISO: string) {
     setMsg(null);
-    if (!canBook) {
-      setMsg("Please sign in to request booking.");
-      return;
+
+    // If not signed in, require guest details
+    if (!isAuthed) {
+      if (!guestName.trim()) {
+        setMsg("Please enter your name.");
+        return;
+      }
+      if (!isValidPhone(guestPhone)) {
+        setMsg("Please enter a valid phone number.");
+        return;
+      }
     }
+
+    const payload = {
+      venueId,
+      startISO,
+      endISO,
+      note: note || undefined,
+
+      // ✅ guest info only if not authed
+      guestName: isAuthed ? undefined : guestName.trim(),
+      guestPhone: isAuthed ? undefined : normalizePhone(guestPhone),
+    };
 
     const res = await clientFetch<{ id: string; status: string }>("/api/bookings", {
       method: "POST",
-      body: JSON.stringify({ venueId, startISO, endISO, note }),
+      body: JSON.stringify(payload),
     });
 
     if (!res.ok) {
@@ -90,13 +134,18 @@ export default function VenueBookingClient({
     }
 
     setNote("");
+    if (!isAuthed) {
+      // keep name/phone for convenience, or clear if you prefer
+      // setGuestName(""); setGuestPhone("");
+    }
+
     setMsg("Booking requested. Status: PENDING (Owner will confirm).");
-    await load(); // refresh availability (PENDING blocks slot)
+    await load(); // refresh availability
   }
 
   return (
     <div className="space-y-4">
-      {/* ✅ Images section */}
+      {/* Images */}
       {gallery.length > 0 && (
         <div className="space-y-2">
           {thumbnailUrl ? (
@@ -113,8 +162,8 @@ export default function VenueBookingClient({
           {gallery.length > 1 && (
             <div className="grid gap-2 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4">
               {gallery
-                .filter((g) => !g.isThumb) // keep thumb only in hero
-                .slice(0, 8) // small MVP limit for UI
+                .filter((g) => !g.isThumb)
+                .slice(0, 8)
                 .map((g) => (
                   <a
                     key={g.url}
@@ -124,16 +173,49 @@ export default function VenueBookingClient({
                     className="border rounded-lg overflow-hidden hover:bg-gray-50"
                     title="Open image"
                   >
-                    <img
-                      src={g.url}
-                      alt="venue image"
-                      className="w-full h-24 object-cover"
-                      loading="lazy"
-                    />
+                    <img src={g.url} alt="venue image" className="w-full h-24 object-cover" loading="lazy" />
                   </a>
                 ))}
             </div>
           )}
+        </div>
+      )}
+
+      {/* Guest fields (only when not signed in) */}
+      {!isAuthed && (
+        <div className="border rounded-lg p-4 bg-gray-50">
+          <h3 className="font-semibold">Book as guest</h3>
+          <p className="text-sm text-gray-600 mt-1">
+            No account needed. Please provide your name and phone so the owner can contact you.
+          </p>
+
+          <div className="mt-3 grid gap-3 sm:grid-cols-2">
+            <div>
+              <label className="text-sm">Your name</label>
+              <input
+                className="mt-1 w-full border rounded px-3 py-2 bg-white"
+                value={guestName}
+                onChange={(e) => setGuestName(e.target.value)}
+                placeholder="e.g. Mehedy Hassan"
+                autoComplete="name"
+              />
+            </div>
+
+            <div>
+              <label className="text-sm">Phone number</label>
+              <input
+                className="mt-1 w-full border rounded px-3 py-2 bg-white"
+                value={guestPhone}
+                onChange={(e) => setGuestPhone(e.target.value)}
+                placeholder="e.g. 01XXXXXXXXX or +8801XXXXXXXXX"
+                inputMode="tel"
+                autoComplete="tel"
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                We’ll store this only for booking communication.
+              </p>
+            </div>
+          </div>
         </div>
       )}
 
@@ -155,7 +237,7 @@ export default function VenueBookingClient({
             className="mt-1 w-full border rounded px-3 py-2"
             value={note}
             onChange={(e) => setNote(e.target.value)}
-            placeholder="e.g. team name / phone / details"
+            placeholder="e.g. team name / details"
           />
         </div>
 
@@ -179,8 +261,7 @@ export default function VenueBookingClient({
             >
               <div className="text-sm font-medium">Request</div>
               <div className="text-xs text-gray-600 mt-1">
-                {new Date(s.startISO).toLocaleString()} →{" "}
-                {new Date(s.endISO).toLocaleString()}
+                {new Date(s.startISO).toLocaleString()} → {new Date(s.endISO).toLocaleString()}
               </div>
             </button>
           ))}
@@ -189,9 +270,13 @@ export default function VenueBookingClient({
 
       {msg && <p className="text-sm">{msg}</p>}
 
-      {!canBook && (
+      {isAuthed ? (
         <p className="text-sm text-gray-600">
-          Sign in to request booking. Your request will be <b>confirmed by Owner</b>.
+          You’re signed in. Your request will be <b>confirmed by Owner</b>.
+        </p>
+      ) : (
+        <p className="text-sm text-gray-600">
+          Booking requests are reviewed by the <b>Owner</b>. You can also sign in anytime for faster management.
         </p>
       )}
     </div>

@@ -5,15 +5,20 @@ import { clientFetch } from "@/lib/clientFetch";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 
+type GuestInfo = { name: string; phone: string };
+
 type OwnerBooking = {
   _id: string;
   venueId: string;
-  userId: string;
+  userId: string | null;
+  guest: GuestInfo | null;
+  userSnapshot: { name?: string; email?: string; phone?: string } | null;
   start: string;
   end: string;
   status: "PENDING" | "CONFIRMED" | "REJECTED" | "CANCELLED";
-  ownerNote?: string;
-  adminNote?: string; // superuser note (optional)
+
+  ownerNote?: string | null;
+  adminNote?: string | null; // superuser note (optional)
 };
 
 type VenueMini = { id: string; name: string; slug: string };
@@ -45,7 +50,8 @@ export default function OwnerBookingsPage() {
       setNoteById((prev) => {
         const next = { ...prev };
         for (const b of res.data.bookings) {
-          if (next[b._id] === undefined) next[b._id] = b.ownerNote ?? "";
+          const existing = (b.ownerNote ?? "").toString();
+          if (next[b._id] === undefined) next[b._id] = existing;
         }
         return next;
       });
@@ -84,6 +90,80 @@ export default function OwnerBookingsPage() {
     await load();
   }
 
+  function BookingIdentity({ b }: { b: OwnerBooking }) {
+    if (b.guest) {
+      return (
+        <div className="mt-2 rounded-lg border bg-gray-50 p-3">
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-xs rounded-full border px-2 py-0.5 bg-white">
+              Guest booking
+            </span>
+            <span className="text-xs text-gray-500">No account</span>
+          </div>
+
+          <div className="mt-2 text-sm text-gray-700">
+            <div>
+              Name: <b>{b.guest.name}</b>
+            </div>
+            <div className="mt-1">
+              Phone: <span className="font-mono">{b.guest.phone}</span>
+            </div>
+          </div>
+        </div>
+      );
+    }
+    else if (!b.guest) {
+      const snap = b.userSnapshot ?? {};
+      return (
+        <div className="mt-2 rounded-lg border p-3">
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-xs rounded-full border px-2 py-0.5">
+              Signed-in user
+            </span>
+            <span className="text-xs text-gray-500">Account booking</span>
+          </div>
+    
+          <div className="mt-2 text-sm text-gray-700 space-y-1">
+            <div>
+              Name: <b>{snap.name ?? "N/A"}</b>
+            </div>
+            <div>
+              Phone: <span className="font-mono">{snap.phone ?? "N/A"}</span>
+            </div>
+    
+            {/* optional */}
+            {b.userId && (
+              <div className="text-xs text-gray-500">
+                User ID: <span className="font-mono">{b.userId}</span>
+              </div>
+            )}
+          </div>
+        </div>
+      );
+    }
+    
+
+    return (
+      <div className="mt-2 rounded-lg border p-3">
+        <div className="flex items-center justify-between gap-2">
+          <span className="text-xs rounded-full border px-2 py-0.5">
+            Signed-in user
+          </span>
+          <span className="text-xs text-gray-500">Account booking</span>
+        </div>
+
+        <div className="mt-2 text-sm text-gray-700">
+          <div>
+            User ID:{" "}
+            <span className="font-mono">
+              {b.userId ?? "Unknown"}
+            </span>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <PageShell>
       <div className="flex items-center justify-between gap-3">
@@ -110,8 +190,8 @@ export default function OwnerBookingsPage() {
 
             return (
               <div key={b._id} className="border rounded-lg p-4">
-                <div className="flex items-center justify-between gap-3">
-                  <div className="space-y-1">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="space-y-1 min-w-0">
                     <div className="font-semibold">
                       {v ? (
                         <Link className="hover:underline" href={`/v/${v.slug}`}>
@@ -131,8 +211,13 @@ export default function OwnerBookingsPage() {
                     </div>
                   </div>
 
-                  <div className="text-xs border rounded px-2 py-1">{b.status}</div>
+                  <div className="text-xs border rounded px-2 py-1 whitespace-nowrap">
+                    {b.status}
+                  </div>
                 </div>
+
+                {/* ✅ user/guest section */}
+                <BookingIdentity b={b} />
 
                 <div className="mt-3">
                   <label className="text-sm">Owner note (optional)</label>
