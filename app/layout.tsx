@@ -4,6 +4,10 @@ import Providers from "./providers";
 
 export const metadata: Metadata = {
   title: "Booking Platform",
+  icons: {
+    icon: "/favicon.ico",
+    apple: "/apple-touch-icon.png",
+  },
   description: "Turf / Event booking management",
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"),
 };

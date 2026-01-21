@@ -48,12 +48,18 @@ export async function GET() {
     .limit(200)
     .toArray();
 
+    const pendingCount = await db
+  .collection<BookingDoc>(collections.bookings)
+  .countDocuments(role === "ADMIN" ? { status: "PENDING" } : { venueId: { $in: venueIds }, status: "PENDING" });
+
+
   return NextResponse.json({
     venues: venues.map((v) => ({
       id: v._id.toString(),
       name: v.name,
       slug: v.slug,
     })),
+    pendingCount,
     bookings: bookings.map((b) => ({
       _id: b._id.toString(),
       venueId: b.venueId.toString(),

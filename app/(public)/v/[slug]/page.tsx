@@ -41,12 +41,10 @@ export default async function VenuePublicPage({
           <span className="text-xs border rounded px-2 py-1">{venue.type}</span>
         </div>
 
-        {venue.description && <p className="text-gray-700">{venue.description}</p>}
-
         <div className="border rounded-lg p-4 mt-4">
           <h2 className="font-semibold">Request a booking</h2>
           <p className="text-sm text-gray-600 mt-1">
-            Your booking request will be reviewed. <b>Admin confirms</b> the final status.
+            Your booking request will be reviewed. <b>Owner confirms</b> the final status.
           </p>
 
           <div className="mt-4">
@@ -55,6 +53,7 @@ export default async function VenuePublicPage({
               thumbnailUrl={venue.thumbnailUrl}
               images={venue.images}
               slotDurationMinutes={venue.slotDurationMinutes}
+              description={venue?.description}
             />
           </div>
         </div>
