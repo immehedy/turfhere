@@ -70,7 +70,7 @@ export async function PATCH(
     { _id: bookingId },
     {
       $set: {
-        status: parsed.data.status, // ✅ FINAL
+        status: parsed.data.status,
         ownerNote: parsed.data.ownerNote,
         updatedAt: new Date(),
       },

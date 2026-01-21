@@ -3,6 +3,7 @@ import type { ObjectId } from "mongodb";
 export type Role = "USER" | "OWNER" | "ADMIN";
 
 export type BookingStatus =
+  | "APPROVED"
   | "PENDING"        // created by user, awaiting admin final decision
   | "CONFIRMED"      // admin confirmed
   | "REJECTED"       // admin rejected

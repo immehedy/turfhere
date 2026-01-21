@@ -87,7 +87,7 @@ export const bookingCreateSchema = z.object({
 });
 
 export const ownerDecisionSchema = z.object({
-  ownerDecision: z.enum(["APPROVED", "CONFIRMED", "REJECTED", "CANCELLED"]),
+  status: z.enum(["APPROVED", "CONFIRMED", "REJECTED", "CANCELLED"]),
   ownerNote: z.string().max(500).optional(),
 });
 
