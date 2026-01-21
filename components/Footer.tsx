@@ -9,7 +9,10 @@ const Footer = () => {
     <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
       {/* Brand */}
       <div className="space-y-3">
-        <div className="text-lg font-semibold">TurfHere</div>
+      <span className="block text-[15px] sm:text-2xl font-semibold tracking-tight text-gray-900">
+          <span className="font-extrabold">Turf</span>
+          <span className="text-gray-500 font-medium">Here</span>
+        </span>
         <p className="text-sm text-gray-600">
           A request-based booking platform for turfs and event spaces.
           Free for owners. Simple for users.
