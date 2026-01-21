@@ -57,6 +57,27 @@ export const venueCreateSchema = z
     }
   });
 
+  export const venueUpdateSchema = z.object({
+    type: z.enum(["TURF", "EVENT_SPACE"]),
+    name: z.string().min(2).max(120),
+    slug: z
+      .string()
+      .min(3)
+      .max(80)
+      .regex(/^[a-z0-9-]+$/, "Slug can only contain lowercase letters, numbers, and hyphens"),
+  
+    description: z.string().max(2000).optional(),
+    city: z.string().max(80).optional(),
+    area: z.string().max(80).optional(),
+    address: z.string().max(200).optional(),
+  
+    slotDurationMinutes: z.number().int().min(15).max(240),
+    openingHours: openingHoursSchema,
+  
+    thumbnailUrl: urlSchema,
+    images: z.array(urlSchema).max(20),
+  });
+
 
 export const bookingCreateSchema = z.object({
   venueId: z.string().min(1),
