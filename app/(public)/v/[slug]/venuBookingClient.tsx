@@ -3,6 +3,7 @@
 import { clientFetch } from "@/lib/clientFetch";
 import { useEffect, useMemo, useState } from "react";
 import { useSession } from "next-auth/react";
+import { time12 } from "@/lib/utils";
 
 type AvailabilityRes = {
   date: string;
@@ -39,14 +40,8 @@ function formatTimeRange(startISO: string, endISO: string) {
   const start = new Date(startISO);
   const end = new Date(endISO);
   // Friendly time-only range
-  const startStr = start.toLocaleTimeString([], {
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-  const endStr = end.toLocaleTimeString([], {
-    hour: "2-digit",
-    minute: "2-digit",
-  });
+  const startStr = time12(start)
+  const endStr = time12(end)
   return `${startStr} – ${endStr}`;
 }
 

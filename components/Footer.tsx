@@ -89,7 +89,7 @@ const Footer = () => {
     {/* Bottom bar */}
     <div className="mt-8 pt-4 border-t flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs text-gray-500">
       <p>
-        Built with Next.js • MongoDB • Cloudinary
+        Developed by fourbit.io
       </p>
       <div className="flex gap-4">
         <Link className="hover:underline" href="#">

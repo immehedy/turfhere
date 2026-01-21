@@ -2,6 +2,7 @@
 
 import PageShell from "@/components/PageShell";
 import { clientFetch } from "@/lib/clientFetch";
+import { time12 } from "@/lib/utils";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 
@@ -126,8 +127,8 @@ function formatCompactRange(start: string, end: string) {
   const s = new Date(start);
   const e = new Date(end);
   const day = s.toLocaleDateString([], { month: "short", day: "numeric" });
-  const st = s.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-  const et = e.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+  const st = time12(s)
+  const et = time12(e)
   return `${day} • ${st}-${et}`;
 }
 
