@@ -3,7 +3,7 @@
 import PageShell from "@/components/PageShell";
 import { clientFetch } from "@/lib/clientFetch";
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 
 type VenueListItem = {
@@ -18,26 +18,40 @@ type VenueListItem = {
 
 type VenueTypeFilter = "" | "TURF" | "EVENT_SPACE";
 
+/** small debounce hook */
+function useDebouncedValue<T>(value: T, delayMs: number) {
+  const [debounced, setDebounced] = useState(value);
+  useEffect(() => {
+    const t = setTimeout(() => setDebounced(value), delayMs);
+    return () => clearTimeout(t);
+  }, [value, delayMs]);
+  return debounced;
+}
+
 export default function VenuesPage() {
   const sp = useSearchParams();
   const router = useRouter();
 
-  // ✅ initialize from URL (landing page sends these)
+  // initialize from URL
   const initialQ = sp.get("q") ?? "";
-  const initialType = (sp.get("type") ?? "") as VenueTypeFilter;
-  const initialDate = sp.get("date") ?? ""; // YYYY-MM-DD
+  const initialTypeRaw = sp.get("type") ?? "";
+  const initialType: VenueTypeFilter =
+    initialTypeRaw === "TURF" || initialTypeRaw === "EVENT_SPACE" ? (initialTypeRaw as VenueTypeFilter) : "";
+  const initialDate = sp.get("date") ?? "";
 
   const [items, setItems] = useState<VenueListItem[]>([]);
   const [q, setQ] = useState(initialQ);
-  const [type, setType] = useState<VenueTypeFilter>(
-    initialType === "TURF" || initialType === "EVENT_SPACE" ? initialType : ""
-  );
+  const [type, setType] = useState<VenueTypeFilter>(initialType);
   const [date, setDate] = useState(initialDate);
 
   const [loading, setLoading] = useState(true);
+  const [msg, setMsg] = useState<string | null>(null);
 
-  // ✅ keep URL in sync when user changes filters (nice UX)
-  function updateUrl(next: { q?: string; type?: VenueTypeFilter; date?: string }) {
+  // debounce search text so we don't spam the API
+  const dq = useDebouncedValue(q, 300);
+
+  // keep URL in sync
+  const updateUrl = (next: { q?: string; type?: VenueTypeFilter; date?: string }) => {
     const params = new URLSearchParams(sp.toString());
 
     if (next.q !== undefined) {
@@ -58,30 +72,54 @@ export default function VenuesPage() {
 
     const qs = params.toString();
     router.replace(qs ? `/venues?${qs}` : "/venues");
-  }
+  };
 
-  const filtered = useMemo(() => {
-    const s = q.trim().toLowerCase();
+  // Build API query string from current filters
+  const apiQuery = useMemo(() => {
+    const params = new URLSearchParams();
+    if (type) params.set("type", type);
+    if (dq.trim()) params.set("q", dq.trim());
+    // date is MVP only; we pass it to preserve in URL, not used by API yet
+    // If later you add availability filtering server-side, pass it:
+    // if (date) params.set("date", date);
+    return params.toString();
+  }, [type, dq /* date */]);
 
-    return items.filter((v) => {
-      // type filter
-      if (type && v.type !== type) return false;
+  // Prevent stale responses from racing
+  const reqIdRef = useRef(0);
 
-      // text filter
-      if (!s) return true;
-      const hay = `${v.name} ${v.city ?? ""} ${v.area ?? ""}`.toLowerCase();
-      return hay.includes(s);
-    });
-  }, [items, q, type]);
-
+  // Fetch whenever filters change (server-side filtering)
   useEffect(() => {
+    let cancelled = false;
+
     (async () => {
+      const myReqId = ++reqIdRef.current;
       setLoading(true);
-      const res = await clientFetch<{ venues: VenueListItem[] }>("/api/venues");
-      if (res.ok) setItems(res.data.venues);
+      setMsg(null);
+
+      const url = apiQuery ? `/api/venues?${apiQuery}` : "/api/venues";
+      const res = await clientFetch<{ venues: VenueListItem[] }>(url);
+
+      // ignore if newer request already started
+      if (cancelled || myReqId !== reqIdRef.current) return;
+
+      if (!res.ok) {
+        setItems([]);
+        setMsg(typeof res.error === "string" ? res.error : "Failed to load venues");
+        setLoading(false);
+        return;
+      }
+
+      setItems(res.data.venues);
       setLoading(false);
     })();
-  }, []);
+
+    return () => {
+      cancelled = true;
+    };
+  }, [apiQuery]);
+
+  const hasFilters = q.trim() || type || date;
 
   return (
     <PageShell>
@@ -106,7 +144,7 @@ export default function VenuesPage() {
 
             <input
               className="border rounded px-3 py-2 w-full"
-              placeholder="Search by name / city / area…"
+              placeholder="Search by name / city / area / description…"
               value={q}
               onChange={(e) => {
                 const v = e.target.value;
@@ -124,18 +162,18 @@ export default function VenuesPage() {
                 setDate(v);
                 updateUrl({ date: v });
               }}
-              title="(MVP) Date is passed from search. Availability filtering can be added later."
+              title="(MVP) Date is preserved from search. Availability filtering can be added later."
             />
           </div>
         </div>
 
-        {/* Optional: show active filter summary */}
-        {(q.trim() || type || date) && (
+        {hasFilters && (
           <div className="text-sm text-gray-600 flex flex-wrap gap-2 items-center">
             <span className="font-medium">Filters:</span>
             {type && <span className="border rounded px-2 py-1 text-xs">Type: {type}</span>}
             {q.trim() && <span className="border rounded px-2 py-1 text-xs">Query: {q.trim()}</span>}
             {date && <span className="border rounded px-2 py-1 text-xs">Date: {date}</span>}
+
             <button
               className="text-xs underline ml-1"
               onClick={() => {
@@ -149,19 +187,21 @@ export default function VenuesPage() {
             </button>
           </div>
         )}
+
+        {msg && <p className="text-sm text-red-600">{msg}</p>}
       </div>
 
       {loading ? (
         <p className="mt-4 text-gray-600">Loading…</p>
-      ) : filtered.length === 0 ? (
+      ) : items.length === 0 ? (
         <p className="mt-4 text-gray-600">No venues found.</p>
       ) : (
         <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {filtered.map((v) => (
+          {items.map((v) => (
             <Link
               key={v._id}
               href={`/v/${v.slug}${date ? `?date=${encodeURIComponent(date)}` : ""}`}
-              className="border rounded-lg overflow-hidden hover:shadow-sm transition"
+              className="border rounded-lg overflow-hidden hover:shadow-sm transition bg-white"
             >
               <div className="aspect-[16/9] bg-gray-100 overflow-hidden">
                 {v.thumbnailUrl ? (

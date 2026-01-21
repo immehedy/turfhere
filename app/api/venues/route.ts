@@ -47,27 +47,56 @@ export async function POST(req: Request) {
   }
 }
 
-export async function GET() {
+export async function GET(req: Request) {
+  const { searchParams } = new URL(req.url);
+
+  const q = searchParams.get("q")?.trim();
+  const type = searchParams.get("type"); // TURF | EVENT_SPACE
+  const city = searchParams.get("city");
+  const area = searchParams.get("area");
+
   const db = await getDb();
+
+  const filter: any = {
+    status: "ACTIVE",
+  };
+
+  // type filter
+  if (type) {
+    filter.type = type;
+  }
+
+  // location filter
+  if (city || area) {
+    filter.$and = [];
+    if (city) filter.$and.push({ city: new RegExp(city, "i") });
+    if (area) filter.$and.push({ area: new RegExp(area, "i") });
+  }
+
+  // keyword search
+  if (q) {
+    filter.$or = [
+      { name: new RegExp(q, "i") },
+      { description: new RegExp(q, "i") },
+      { city: new RegExp(q, "i") },
+      { area: new RegExp(q, "i") },
+    ];
+  }
+
   const venues = await db
-    .collection<VenueDoc>(collections.venues)
-    .find({ status: "ACTIVE" })
+    .collection(collections.venues)
+    .find(filter)
+    .project({
+      name: 1,
+      slug: 1,
+      type: 1,
+      city: 1,
+      area: 1,
+      thumbnailUrl: 1,
+    })
     .sort({ createdAt: -1 })
-    .limit(200)
+    .limit(50)
     .toArray();
 
-  return NextResponse.json({
-    venues: venues.map((v) => ({
-      _id: v._id.toString(),
-      ownerId: v.ownerId.toString(),
-      name: v.name,
-      slug: v.slug,
-      type: v.type,
-      city: v.city,
-      area: v.area,
-      thumbnailUrl: v.thumbnailUrl,
-      status: v.status,
-      createdAt: v.createdAt,
-    })),
-  });
+  return NextResponse.json({ venues });
 }
