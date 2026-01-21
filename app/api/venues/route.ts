@@ -17,21 +17,27 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const payload = venueCreateSchema.safeParse(await req.json());
-  if (!payload.success) {
-    return NextResponse.json({ error: payload.error.flatten() }, { status: 400 });
+  const parsed = venueCreateSchema.safeParse(await req.json());
+  if (!parsed.success) {
+    return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
   }
 
   const db = await getDb();
+
   const doc: Omit<VenueDoc, "_id"> = {
-    ...payload.data,
+    ...parsed.data,
     ownerId: new ObjectId(userId),
+
+    // normalize
+    slug: parsed.data.slug.trim(),
+    name: parsed.data.name.trim(),
+
     status: "ACTIVE",
     createdAt: new Date(),
   };
 
   try {
-    const res = await db.collection(collections.venues).insertOne(doc as any);
+    const res = await db.collection<VenueDoc>(collections.venues).insertOne(doc as any);
     return NextResponse.json({ id: res.insertedId.toString(), slug: doc.slug });
   } catch (e: any) {
     if (String(e?.message).includes("E11000")) {
@@ -59,6 +65,7 @@ export async function GET() {
       type: v.type,
       city: v.city,
       area: v.area,
+      thumbnailUrl: v.thumbnailUrl,
       status: v.status,
       createdAt: v.createdAt,
     })),

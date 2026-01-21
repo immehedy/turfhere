@@ -10,12 +10,26 @@ type AvailabilityRes = {
   slots: { startISO: string; endISO: string }[];
 };
 
+type Img = { url: string; isThumb?: boolean };
+
+function uniqUrls(urls: string[]) {
+  return Array.from(new Set(urls.map((u) => u.trim()).filter(Boolean)));
+}
+
 export default function VenueBookingClient({
   venueId,
   slotDurationMinutes,
+  thumbnailUrl,
+  images,
+  venueName,
 }: {
   venueId: string;
   slotDurationMinutes: number;
+
+  // ✅ new
+  thumbnailUrl?: string;
+  images?: string[];
+  venueName?: string;
 }) {
   const { status } = useSession();
   const [date, setDate] = useState(() => new Date().toISOString().slice(0, 10));
@@ -26,28 +40,32 @@ export default function VenueBookingClient({
   const [msg, setMsg] = useState<string | null>(null);
 
   const canBook = status === "authenticated";
-
   const slots = useMemo(() => data?.slots ?? [], [data]);
+
+  // ✅ build gallery: thumbnail first + rest
+  const gallery: Img[] = useMemo(() => {
+    const all = uniqUrls([thumbnailUrl ?? "", ...(images ?? [])]);
+    return all.map((url) => ({ url, isThumb: url === (thumbnailUrl ?? "") }));
+  }, [thumbnailUrl, images]);
 
   async function load() {
     setMsg(null);
     setLoading(true);
-  
+
     const res = await clientFetch<AvailabilityRes>(
       `/api/venues/id/${venueId}/availability?date=${encodeURIComponent(date)}`
     );
-  
+
     setLoading(false);
-  
+
     if (!res.ok) {
       setData(null);
       setMsg(`Failed to load availability. (${res.status})`);
       return;
     }
-  
+
     setData(res.data);
   }
-  
 
   useEffect(() => {
     load();
@@ -72,12 +90,54 @@ export default function VenueBookingClient({
     }
 
     setNote("");
-    setMsg("Booking requested. Status: PENDING (Admin will confirm).");
+    setMsg("Booking requested. Status: PENDING (Owner will confirm).");
     await load(); // refresh availability (PENDING blocks slot)
   }
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-4">
+      {/* ✅ Images section */}
+      {gallery.length > 0 && (
+        <div className="space-y-2">
+          {thumbnailUrl ? (
+            <div className="border rounded-lg overflow-hidden">
+              <img
+                src={thumbnailUrl}
+                alt={venueName ? `${venueName} thumbnail` : "thumbnail"}
+                className="w-full max-h-[320px] object-cover"
+                loading="lazy"
+              />
+            </div>
+          ) : null}
+
+          {gallery.length > 1 && (
+            <div className="grid gap-2 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4">
+              {gallery
+                .filter((g) => !g.isThumb) // keep thumb only in hero
+                .slice(0, 8) // small MVP limit for UI
+                .map((g) => (
+                  <a
+                    key={g.url}
+                    href={g.url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="border rounded-lg overflow-hidden hover:bg-gray-50"
+                    title="Open image"
+                  >
+                    <img
+                      src={g.url}
+                      alt="venue image"
+                      className="w-full h-24 object-cover"
+                      loading="lazy"
+                    />
+                  </a>
+                ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Controls */}
       <div className="flex flex-col sm:flex-row sm:items-end gap-3">
         <div>
           <label className="text-sm">Date</label>
@@ -104,6 +164,7 @@ export default function VenueBookingClient({
         </div>
       </div>
 
+      {/* Slots */}
       {loading ? (
         <p className="text-gray-600">Loading slots…</p>
       ) : slots.length === 0 ? (
@@ -118,7 +179,8 @@ export default function VenueBookingClient({
             >
               <div className="text-sm font-medium">Request</div>
               <div className="text-xs text-gray-600 mt-1">
-                {new Date(s.startISO).toLocaleString()} → {new Date(s.endISO).toLocaleString()}
+                {new Date(s.startISO).toLocaleString()} →{" "}
+                {new Date(s.endISO).toLocaleString()}
               </div>
             </button>
           ))}
@@ -126,9 +188,10 @@ export default function VenueBookingClient({
       )}
 
       {msg && <p className="text-sm">{msg}</p>}
+
       {!canBook && (
         <p className="text-sm text-gray-600">
-          Sign in to request booking. Your request will be <b>confirmed by Admin</b>.
+          Sign in to request booking. Your request will be <b>confirmed by Owner</b>.
         </p>
       )}
     </div>

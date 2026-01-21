@@ -7,26 +7,56 @@ export const registerSchema = z.object({
   role: z.enum(["USER", "OWNER"]).default("USER"), // no self-register admin
 });
 
-export const venueCreateSchema = z.object({
-  type: z.enum(["TURF", "EVENT_SPACE"]),
-  name: z.string().min(2).max(120),
-  slug: z.string().min(3).max(80).regex(/^[a-z0-9-]+$/),
-  description: z.string().max(2000).optional(),
+const Weekday = z.enum(["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"]);
 
-  city: z.string().max(80).optional(),
-  area: z.string().max(80).optional(),
-  address: z.string().max(180).optional(),
+const timeHHMM = z
+  .string()
+  .regex(/^\d{2}:\d{2}$/, "Time must be HH:MM");
 
-  slotDurationMinutes: z.number().int().min(15).max(240),
-  openingHours: z.record(
-    z.enum(["SUN","MON","TUE","WED","THU","FRI","SAT"]),
-    z.object({
-      open: z.string().regex(/^\d{2}:\d{2}$/),
-      close: z.string().regex(/^\d{2}:\d{2}$/),
-      closed: z.boolean().optional(),
-    })
-  ),
-});
+const openingHoursSchema = z.record(
+  Weekday,
+  z.object({
+    open: timeHHMM,
+    close: timeHHMM,
+    closed: z.boolean(),
+  })
+);
+
+const urlSchema = z.string().url("Must be a valid URL");
+
+export const venueCreateSchema = z
+  .object({
+    type: z.enum(["TURF", "EVENT_SPACE"]),
+    name: z.string().min(2).max(120),
+    slug: z
+      .string()
+      .min(3)
+      .max(80)
+      .regex(/^[a-z0-9-]+$/, "Slug can only contain lowercase letters, numbers, and hyphens"),
+
+    description: z.string().max(2000).optional(),
+    city: z.string().max(80).optional(),
+    area: z.string().max(80).optional(),
+    address: z.string().max(200).optional(),
+
+    slotDurationMinutes: z.number().int().min(15).max(240),
+    openingHours: openingHoursSchema,
+
+    thumbnailUrl: urlSchema,
+    images: z.array(urlSchema).max(20).default([]),
+  })
+  .superRefine((val, ctx) => {
+    // Optional rule: ensure thumbnail is also in images (nice UX)
+    // If you don't want this, remove this block.
+    if (val.images.length > 0 && !val.images.includes(val.thumbnailUrl)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["images"],
+        message: "Images must include the thumbnail URL (or keep images empty).",
+      });
+    }
+  });
+
 
 export const bookingCreateSchema = z.object({
   venueId: z.string().min(1),
@@ -36,7 +66,7 @@ export const bookingCreateSchema = z.object({
 });
 
 export const ownerDecisionSchema = z.object({
-  status: z.enum(["APPROVED", "CONFIRMED", "REJECTED", "CANCELLED"]),
+  ownerDecision: z.enum(["APPROVED", "CONFIRMED", "REJECTED", "CANCELLED"]),
   ownerNote: z.string().max(500).optional(),
 });
 
