@@ -45,7 +45,7 @@ export default function HomePage() {
             </div>
 
             <h1 className="text-3xl md:text-4xl font-semibold leading-tight wrap-break-words">
-              Book turfs & event spaces — fast, simple, and verified.
+              Book Sports Turfs & Event Spaces Instantly Near You
             </h1>
 
             <p className="text-gray-700 text-base md:text-lg wrap-break-words">

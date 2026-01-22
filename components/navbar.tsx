@@ -239,7 +239,7 @@ export default function NavBar() {
 
                 <TabLink href="/owner">
                   <Home className="h-4 w-4" />
-                  {/* Owner */}
+                  Owner
                 </TabLink>
 
                 <TabLink href="/owner/bookings" emphasize={pendingCount > 0}>
@@ -261,13 +261,6 @@ export default function NavBar() {
               <TabLink href="/account/bookings">
                 <Ticket className="h-4 w-4" />
                 My Bookings
-              </TabLink>
-            )}
-
-            {!isAuthed && (
-              <TabLink href="/signin">
-                <LogIn className="h-4 w-4" />
-                Sign in
               </TabLink>
             )}
           </div>
