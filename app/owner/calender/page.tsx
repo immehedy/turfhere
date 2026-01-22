@@ -530,17 +530,13 @@ export default function OwnerCalendarPage() {
                   <div className="flex items-center justify-between">
                     <div className="text-sm font-semibold">{d.getDate()}</div>
 
-                    {count > 0 ? (
+                    {count > 0 && (
                       <span className="text-[11px] rounded-full bg-black text-white px-2 py-0.5">{count}</span>
-                    ) : (
-                      <span className="text-[11px] rounded-full bg-gray-100 text-gray-500 px-2 py-0.5 ring-1 ring-gray-200">
-                        0
-                      </span>
                     )}
                   </div>
 
                   {/* mini indicators: mobile 2, desktop 4 */}
-                  {count > 0 ? (
+                  {count > 0 && (
                     <>
                       {/* Mobile */}
                       <div className="mt-2 flex flex-wrap gap-1 sm:hidden">
@@ -586,8 +582,6 @@ export default function OwnerCalendarPage() {
                         ) : null}
                       </div>
                     </>
-                  ) : (
-                    <div className="mt-3 text-xs text-gray-400">No bookings</div>
                   )}
                 </button>
               );
