@@ -53,8 +53,7 @@ function TopActionLink({
         variant === "solid"
           ? "bg-black text-white hover:bg-black/90"
           : "border border-gray-200 bg-white text-gray-800 hover:bg-gray-50",
-      ].join(" ")}
-    >
+      ].join(" ")}>
       {children}
     </Link>
   );
@@ -77,8 +76,7 @@ function TabLink({
         emphasize
           ? "bg-rose-50 text-rose-900 border-rose-200 hover:bg-rose-100"
           : "bg-white text-gray-800 border-gray-200 hover:bg-gray-50",
-      ].join(" ")}
-    >
+      ].join(" ")}>
       {children}
     </Link>
   );
@@ -107,7 +105,9 @@ export default function NavBar() {
     }
 
     loadPendingCount();
-    const id = isOwner ? window.setInterval(loadPendingCount, 30_000) : undefined;
+    const id = isOwner
+      ? window.setInterval(loadPendingCount, 30_000)
+      : undefined;
 
     return () => {
       alive = false;
@@ -124,51 +124,47 @@ export default function NavBar() {
         <div className="flex items-center gap-2">
           {/* Desktop inline links */}
           <nav className="hidden md:flex items-center gap-2">
-            <Link
-              href="/venues"
-              className="rounded-2xl px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-gray-900"
-            >
-              Venues
-            </Link>
 
             {isAuthed && (
               <Link
                 href="/account/bookings"
-                className="rounded-2xl px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-gray-900"
-              >
+                className="rounded-2xl px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-gray-900">
                 My Bookings
               </Link>
             )}
 
             {isOwner && (
-              <Link
-                href="/owner"
-                className="rounded-2xl px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-gray-900"
-              >
-                Owner
-              </Link>
-            )}
-
-            {isOwner && (
-              <Link
-                href="/owner/bookings"
-                className={[
-                  "rounded-2xl px-3 py-2 text-sm font-medium transition inline-flex items-center gap-2",
-                  pendingCount > 0
-                    ? "bg-rose-50 text-rose-900 ring-1 ring-rose-200 hover:bg-rose-100"
-                    : "text-gray-700 hover:bg-gray-100 hover:text-gray-900",
-                ].join(" ")}
-              >
-                Booking Requests
-                {pendingCount > 0 ? <PendingBadge count={pendingCount} /> : null}
-              </Link>
+              <>
+                <Link
+                  href="/owner/calender"
+                  className="rounded-2xl px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-gray-900">
+                  Calender
+                </Link>
+                <Link
+                  href="/owner"
+                  className="rounded-2xl px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-gray-900">
+                  Owner
+                </Link>
+                <Link
+                  href="/owner/bookings"
+                  className={[
+                    "rounded-2xl px-3 py-2 text-sm font-medium transition inline-flex items-center gap-2",
+                    pendingCount > 0
+                      ? "bg-rose-50 text-rose-900 ring-1 ring-rose-200 hover:bg-rose-100"
+                      : "text-gray-700 hover:bg-gray-100 hover:text-gray-900",
+                  ].join(" ")}>
+                  Booking Requests
+                  {pendingCount > 0 ? (
+                    <PendingBadge count={pendingCount} />
+                  ) : null}
+                </Link>
+              </>
             )}
 
             {isAdmin && (
               <Link
                 href="/admin"
-                className="rounded-2xl px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-gray-900"
-              >
+                className="rounded-2xl px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-gray-900">
                 Admin
               </Link>
             )}
@@ -178,8 +174,7 @@ export default function NavBar() {
           {isAuthed ? (
             <button
               onClick={() => signOut({ callbackUrl: "/" })}
-              className="rounded-2xl border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-800 hover:bg-gray-50"
-            >
+              className="rounded-2xl border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-800 hover:bg-gray-50">
               Sign out
             </button>
           ) : (
@@ -199,17 +194,21 @@ export default function NavBar() {
       <div className="md:hidden border-t bg-white">
         <div className="mx-auto max-w-6xl px-4 py-2">
           <div className="flex items-center gap-2 overflow-x-auto no-scrollbar">
-            <TabLink href="/venues">Venues</TabLink>
-
-            {isAuthed && <TabLink href="/account/bookings">My Bookings</TabLink>}
-
-            {isOwner && <TabLink href="/owner">Owner</TabLink>}
+            {isAuthed && (
+              <TabLink href="/account/bookings">My Bookings</TabLink>
+            )}
 
             {isOwner && (
-              <TabLink href="/owner/bookings" emphasize={pendingCount > 0}>
-                <span>Requests</span>
-                {pendingCount > 0 ? <PendingBadge count={pendingCount} /> : null}
-              </TabLink>
+              <>
+                <TabLink href="/owner/calender">Calender</TabLink>
+                <TabLink href="/owner">Owner</TabLink>
+                <TabLink href="/owner/bookings" emphasize={pendingCount > 0}>
+                  <span>Requests</span>
+                  {pendingCount > 0 ? (
+                    <PendingBadge count={pendingCount} />
+                  ) : null}
+                </TabLink>
+              </>
             )}
 
             {isAdmin && <TabLink href="/admin">Admin</TabLink>}
