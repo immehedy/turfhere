@@ -8,7 +8,7 @@ import { useMemo, useState } from "react";
 export default function SignInClient() {
   const sp = useSearchParams();
 
-  const callbackUrl = useMemo(() => sp.get("callbackUrl") ?? "/", [sp]);
+  const callbackUrl = useMemo(() => sp.get("callbackUrl") ?? "/owner/calender", [sp]);
   const error = sp.get("error");
 
   const [loading, setLoading] = useState(false);
