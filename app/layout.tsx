@@ -8,7 +8,7 @@ export const metadata: Metadata = {
     icon: "/favicon.ico",
     apple: "/apple-touch-icon.png",
   },
-  description: "Turf / Event booking management",
+  description: "Book Sports Turfs & Event Spaces Instantly Near You",
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"),
 };
 

@@ -5,7 +5,6 @@ import Image from "next/image";
 import FullBleed from "@/components/FullBleed";
 import CategoryCard from "@/components/CategoryCard";
 import LandingSearch from "@/components/LandingSearch";
-import Stat from "@/components/Stat";
 import InfoCard from "@/components/InfoCard";
 import MiniFeature from "@/components/MiniFeature";
 
@@ -34,8 +33,9 @@ export default function HomePage() {
   return (
     <PageShell>
       <div className="space-y-10">
-        {/* HERO (kept inside normal container) */}
+        {/* HERO */}
         <section className="grid gap-8 lg:grid-cols-2 items-center overflow-hidden">
+          {/* Left */}
           <div className="space-y-5 min-w-0">
             <div className="inline-flex items-center gap-2 rounded-full border px-3 py-1 text-sm w-fit max-w-full">
               <span className="h-2 w-2 rounded-full bg-green-500 shrink-0" />
@@ -44,11 +44,11 @@ export default function HomePage() {
               </span>
             </div>
 
-            <h1 className="text-3xl md:text-4xl font-semibold leading-tight wrap-break-words">
-              Book turfs & event spaces — fast, simple, and verified.
+            <h1 className="text-3xl md:text-4xl font-semibold leading-tight break-words">
+              Book Sports Turfs & Event Spaces Instantly Near You
             </h1>
 
-            <p className="text-gray-700 text-base md:text-lg wrap-break-words">
+            <p className="text-gray-700 text-base md:text-lg break-words">
               Anyone can register a venue for free. Users request bookings.
               Venue owners confirm — and admins can monitor everything.
             </p>
@@ -65,57 +65,52 @@ export default function HomePage() {
                 Register as owner
               </Link>
             </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2">
-              <Stat label="Venues listed" value="1,200+" />
-              <Stat label="Cities covered" value="25+" />
-              <Stat label="Requests/day" value="500+" />
-            </div>
           </div>
 
-          {/* Right side */}
-          <div className="relative min-w-0">
-            {/* Decorative gradient (fixed overflow) */}
-            <div className="absolute inset-0 sm:-inset-4 bg-linear-to-tr from-indigo-200 via-pink-200 to-yellow-200 rounded-2xl blur-2xl opacity-70 pointer-events-none" />
-
-            <div className="relative border rounded-2xl overflow-hidden shadow-sm bg-white">
+          {/* Right (hero image + centered glass search overlay) */}
+          <div className="relative rounded-2xl overflow-hidden border bg-white shadow-sm">
+            <div className="relative">
               <Image
                 src="/images/hero.jpg"
                 alt="Turf and event booking"
                 width={1600}
                 height={900}
-                className="w-full h-65 sm:h-80 object-cover"
+                className="w-full h-80 object-cover"
                 priority
               />
-              <div className="p-4">
-                <p className="text-sm text-gray-600">
-                  “Search, request, and confirm — all in one dashboard.”
-                </p>
+
+              {/* Contrast overlay */}
+              <div className="absolute inset-0 bg-black/35" />
+
+              {/* Overlay: bottom on mobile, center on desktop */}
+              <div className="absolute inset-0 flex items-center justify-center px-3 sm:px-6">
+                <div
+                  className="
+          w-full max-w-md sm:max-w-2xl
+          rounded-3xl
+          border border-white/20
+          bg-white/10
+          backdrop-blur-xl
+          shadow-2xl
+          p-3 sm:p-6
+        ">
+                  <div className="text-center mb-3 sm:mb-5">
+                    <h2 className="text-white text-base sm:text-2xl font-semibold">
+                      Find your venue
+                    </h2>
+                    <p className="text-white/80 text-[11px] sm:text-sm mt-1">
+                      Type, location & date — then search
+                    </p>
+                  </div>
+
+                  <LandingSearch />
+                </div>
               </div>
             </div>
           </div>
         </section>
 
-        {/* FULL-BLEED SEARCH (mobile full width) */}
-        <FullBleed>
-          <section className="bg-white">
-            <div className="max-w-7xl mx-auto px-4 py-6">
-              <div className="border rounded-2xl p-4 md:p-6 shadow-sm">
-                <h2 className="text-lg font-semibold">Find a place</h2>
-                <p className="text-sm text-gray-600 mt-1">
-                  Search by type, location, and date. You’ll be taken to the
-                  venues page with your results.
-                </p>
-
-                <div className="mt-4">
-                  <LandingSearch />
-                </div>
-              </div>
-            </div>
-          </section>
-        </FullBleed>
-
-        {/* POPULAR (full width cards area on mobile) */}
+        {/* POPULAR */}
         <FullBleed>
           <section className="bg-white">
             <div className="max-w-7xl mx-auto px-4 py-6">
@@ -161,7 +156,7 @@ export default function HomePage() {
           </section>
         </FullBleed>
 
-        {/* HOW IT WORKS (keep normal width is fine, but we can full-bleed too) */}
+        {/* HOW IT WORKS */}
         <FullBleed>
           <section className="bg-white">
             <div className="max-w-7xl mx-auto px-4 py-6">
@@ -186,7 +181,7 @@ export default function HomePage() {
           </section>
         </FullBleed>
 
-        {/* FOR OWNERS (full width on mobile) */}
+        {/* FOR OWNERS */}
         <FullBleed>
           <section className="bg-white">
             <div className="max-w-7xl mx-auto px-4 py-6">
@@ -241,7 +236,7 @@ export default function HomePage() {
           </section>
         </FullBleed>
 
-        {/* TRUST (full-bleed gradient) */}
+        {/* TRUST */}
         <FullBleed>
           <section className="bg-linear-to-r from-indigo-50 via-pink-50 to-yellow-50">
             <div className="max-w-7xl mx-auto px-4 py-8">
@@ -273,7 +268,7 @@ export default function HomePage() {
           </section>
         </FullBleed>
 
-        {/* CTA (full width on mobile) */}
+        {/* CTA */}
         <FullBleed>
           <section className="bg-white">
             <div className="max-w-7xl mx-auto px-4 py-6">
