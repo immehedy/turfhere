@@ -3,7 +3,7 @@ import "./globals.css";
 import Providers from "./providers";
 
 export const metadata: Metadata = {
-  title: "Booking Platform",
+  title: "Turf Here | Booking Platform",
   icons: {
     icon: "/favicon.ico",
     apple: "/apple-touch-icon.png",

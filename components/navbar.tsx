@@ -4,6 +4,14 @@ import Link from "next/link";
 import { signOut, useSession } from "next-auth/react";
 import { useEffect, useState } from "react";
 import { clientFetch } from "@/lib/clientFetch";
+import {
+  CalendarDays,
+  Home,
+  Shield,
+  Ticket,
+  ClipboardList,
+  LogIn,
+} from "lucide-react";
 
 function BrandLogo() {
   return (
@@ -84,6 +92,31 @@ function TabLink({
   );
 }
 
+function NavItem({
+  href,
+  icon,
+  children,
+  className,
+}: {
+  href: string;
+  icon: React.ReactNode;
+  children: React.ReactNode;
+  className?: string;
+}) {
+  return (
+    <Link
+      href={href}
+      className={[
+        "rounded-2xl px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-gray-900 inline-flex items-center gap-2",
+        className ?? "",
+      ].join(" ")}
+    >
+      <span className="text-gray-500">{icon}</span>
+      <span>{children}</span>
+    </Link>
+  );
+}
+
 export default function NavBar() {
   const { data: session, status } = useSession();
   const role = (session as any)?.role as string | undefined;
@@ -124,53 +157,50 @@ export default function NavBar() {
         <div className="flex items-center gap-2">
           {/* Desktop inline links */}
           <nav className="hidden md:flex items-center gap-2">
-            <Link
-              href="/venues"
-              className="rounded-2xl px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-gray-900"
-            >
-              Venues
-            </Link>
-
             {isAuthed && (
-              <Link
+              <NavItem
                 href="/account/bookings"
-                className="rounded-2xl px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-gray-900"
+                icon={<Ticket className="h-4 w-4" />}
               >
                 My Bookings
-              </Link>
+              </NavItem>
             )}
 
             {isOwner && (
-              <Link
-                href="/owner"
-                className="rounded-2xl px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-gray-900"
-              >
-                Owner
-              </Link>
-            )}
+              <>
+                <NavItem
+                  href="/owner/calender"
+                  icon={<CalendarDays className="h-4 w-4" />}
+                >
+                  Calender
+                </NavItem>
 
-            {isOwner && (
-              <Link
-                href="/owner/bookings"
-                className={[
-                  "rounded-2xl px-3 py-2 text-sm font-medium transition inline-flex items-center gap-2",
-                  pendingCount > 0
-                    ? "bg-rose-50 text-rose-900 ring-1 ring-rose-200 hover:bg-rose-100"
-                    : "text-gray-700 hover:bg-gray-100 hover:text-gray-900",
-                ].join(" ")}
-              >
-                Booking Requests
-                {pendingCount > 0 ? <PendingBadge count={pendingCount} /> : null}
-              </Link>
+                <NavItem href="/owner" icon={<Home className="h-4 w-4" />}>
+                  Owner
+                </NavItem>
+
+                <Link
+                  href="/owner/bookings"
+                  className={[
+                    "rounded-2xl px-3 py-2 text-sm font-medium transition inline-flex items-center gap-2",
+                    pendingCount > 0
+                      ? "bg-rose-50 text-rose-900 ring-1 ring-rose-200 hover:bg-rose-100"
+                      : "text-gray-700 hover:bg-gray-100 hover:text-gray-900",
+                  ].join(" ")}
+                >
+                  <span className="text-gray-500">
+                    <ClipboardList className="h-4 w-4" />
+                  </span>
+                  <span>Booking Requests</span>
+                  {pendingCount > 0 ? <PendingBadge count={pendingCount} /> : null}
+                </Link>
+              </>
             )}
 
             {isAdmin && (
-              <Link
-                href="/admin"
-                className="rounded-2xl px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-gray-900"
-              >
+              <NavItem href="/admin" icon={<Shield className="h-4 w-4" />}>
                 Admin
-              </Link>
+              </NavItem>
             )}
           </nav>
 
@@ -199,23 +229,47 @@ export default function NavBar() {
       <div className="md:hidden border-t bg-white">
         <div className="mx-auto max-w-6xl px-4 py-2">
           <div className="flex items-center gap-2 overflow-x-auto no-scrollbar">
-            <TabLink href="/venues">Venues</TabLink>
-
-            {isAuthed && <TabLink href="/account/bookings">My Bookings</TabLink>}
-
-            {isOwner && <TabLink href="/owner">Owner</TabLink>}
+            
 
             {isOwner && (
-              <TabLink href="/owner/bookings" emphasize={pendingCount > 0}>
-                <span>Requests</span>
-                {pendingCount > 0 ? <PendingBadge count={pendingCount} /> : null}
+              <>
+                <TabLink href="/owner/calender">
+                  <CalendarDays className="h-4 w-4" />
+                </TabLink>
+
+                <TabLink href="/owner">
+                  <Home className="h-4 w-4" />
+                  {/* Owner */}
+                </TabLink>
+
+                <TabLink href="/owner/bookings" emphasize={pendingCount > 0}>
+                  <ClipboardList className="h-4 w-4" />
+                  <span>Requests</span>
+                  {pendingCount > 0 ? <PendingBadge count={pendingCount} /> : null}
+                </TabLink>
+              </>
+            )}
+
+            {isAdmin && (
+              <TabLink href="/admin">
+                <Shield className="h-4 w-4" />
+                Admin
               </TabLink>
             )}
 
-            {isAdmin && <TabLink href="/admin">Admin</TabLink>}
+            {isAuthed && (
+              <TabLink href="/account/bookings">
+                <Ticket className="h-4 w-4" />
+                My Bookings
+              </TabLink>
+            )}
 
-            {/* Optional quick auth tab on mobile */}
-            {!isAuthed && <TabLink href="/signin">Sign in</TabLink>}
+            {!isAuthed && (
+              <TabLink href="/signin">
+                <LogIn className="h-4 w-4" />
+                Sign in
+              </TabLink>
+            )}
           </div>
         </div>
       </div>
