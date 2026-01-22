@@ -4,7 +4,7 @@ import PageShell from "@/components/PageShell";
 import { clientFetch } from "@/lib/clientFetch";
 import { time12 } from "@/lib/utils";
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 
 type GuestInfo = { name: string; phone: string };
 
@@ -215,12 +215,10 @@ function Modal({
         <div
           className={[
             "w-full max-w-3xl rounded-2xl bg-white shadow-xl border border-gray-200 overflow-hidden",
-            // fixed-ish height, not stretched
             "h-[78vh] sm:h-[74vh] max-h-[74vh]",
             "flex flex-col",
           ].join(" ")}
         >
-          {/* Header stays fixed */}
           <div className="p-4 border-b border-gray-200 flex items-center justify-between gap-3 shrink-0">
             <div className="min-w-0">
               <div className="text-lg font-semibold truncate">{title}</div>
@@ -234,7 +232,6 @@ function Modal({
             </button>
           </div>
 
-          {/* Scrollable body */}
           <div className="p-4 overflow-y-auto flex-1">{children}</div>
         </div>
       </div>
@@ -513,7 +510,8 @@ export default function OwnerCalendarPage() {
           <div className="grid grid-cols-7">
             {calendarDays.map((d) => {
               const k = dayKey(d);
-              const count = bookingsByDay.get(k)?.length ?? 0;
+              const items = bookingsByDay.get(k) ?? [];
+              const count = items.length;
 
               const isInMonth = d.getMonth() === month.getMonth();
               const cellDateOnly = new Date(d.getFullYear(), d.getMonth(), d.getDate());
@@ -541,24 +539,53 @@ export default function OwnerCalendarPage() {
                     )}
                   </div>
 
-                  {/* mini indicators */}
+                  {/* mini indicators: mobile 2, desktop 4 */}
                   {count > 0 ? (
-                    <div className="mt-2 flex flex-wrap gap-1">
-                      {(bookingsByDay.get(k) ?? []).slice(0, 5).map((b) => (
-                        <span
-                          key={b._id}
-                          className={[
-                            "inline-flex items-center rounded-full px-2 py-0.5 text-[10px] ring-1",
-                            b.status === "CONFIRMED"
-                              ? "bg-emerald-50 text-emerald-800 ring-emerald-200"
-                              : "bg-amber-50 text-amber-800 ring-amber-200",
-                          ].join(" ")}
-                        >
-                          {time12(new Date(b.start))}
-                        </span>
-                      ))}
-                      {count > 5 ? <span className="text-[10px] text-gray-500 mt-1">+{count - 5} more</span> : null}
-                    </div>
+                    <>
+                      {/* Mobile */}
+                      <div className="mt-2 flex flex-wrap gap-1 sm:hidden">
+                        {items.slice(0, 2).map((b) => (
+                          <span
+                            key={b._id}
+                            className={[
+                              "inline-flex items-center rounded-full px-2 py-0.5 text-[10px] ring-1 max-w-full",
+                              b.status === "CONFIRMED"
+                                ? "bg-emerald-50 text-emerald-800 ring-emerald-200"
+                                : "bg-amber-50 text-amber-800 ring-amber-200",
+                            ].join(" ")}
+                          >
+                            <span className="truncate">{time12(new Date(b.start))}</span>
+                          </span>
+                        ))}
+                        {count > 2 ? (
+                          <span className="inline-flex items-center rounded-full px-2 py-0.5 text-[10px] ring-1 bg-gray-50 text-gray-700 ring-gray-200">
+                            +{count - 2}
+                          </span>
+                        ) : null}
+                      </div>
+
+                      {/* Desktop */}
+                      <div className="mt-2 hidden sm:flex flex-wrap gap-1">
+                        {items.slice(0, 4).map((b) => (
+                          <span
+                            key={b._id}
+                            className={[
+                              "inline-flex items-center rounded-full px-2 py-0.5 text-[10px] ring-1 max-w-full",
+                              b.status === "CONFIRMED"
+                                ? "bg-emerald-50 text-emerald-800 ring-emerald-200"
+                                : "bg-amber-50 text-amber-800 ring-amber-200",
+                            ].join(" ")}
+                          >
+                            <span className="truncate">{time12(new Date(b.start))}</span>
+                          </span>
+                        ))}
+                        {count > 4 ? (
+                          <span className="inline-flex items-center rounded-full px-2 py-0.5 text-[10px] ring-1 bg-gray-50 text-gray-700 ring-gray-200">
+                            +{count - 4}
+                          </span>
+                        ) : null}
+                      </div>
+                    </>
                   ) : (
                     <div className="mt-3 text-xs text-gray-400">No bookings</div>
                   )}
@@ -585,11 +612,7 @@ export default function OwnerCalendarPage() {
               const phone = b.guest?.phone ?? b.userSnapshot?.phone ?? null;
 
               return (
-                <div
-                  key={b._id}
-                  className="rounded-2xl border border-gray-200 bg-white p-3 shadow-sm flex flex-col gap-2"
-                >
-                  {/* top */}
+                <div key={b._id} className="rounded-2xl border border-gray-200 bg-white p-3 shadow-sm flex flex-col gap-2">
                   <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0">
                       <div className="text-sm font-semibold text-gray-900 truncate">
@@ -609,7 +632,6 @@ export default function OwnerCalendarPage() {
                     <StatusPill status={b.status} />
                   </div>
 
-                  {/* identity */}
                   <div className="rounded-xl border border-gray-200 bg-gray-50 p-2">
                     <div className="flex items-center gap-2 text-xs text-gray-900">
                       <Icon name="user" className="h-3.5 w-3.5" />
@@ -630,7 +652,6 @@ export default function OwnerCalendarPage() {
                     ) : null}
                   </div>
 
-                  {/* note */}
                   <div>
                     <label className="text-[11px] text-gray-700 inline-flex items-center gap-2">
                       <Icon name="note" className="h-3.5 w-3.5" />
@@ -645,7 +666,6 @@ export default function OwnerCalendarPage() {
                     />
                   </div>
 
-                  {/* actions */}
                   {isPending ? (
                     <div className="flex gap-2 pt-1">
                       <button
@@ -687,7 +707,6 @@ export default function OwnerCalendarPage() {
         )}
       </Modal>
 
-      {/* Confirmation dialog */}
       <ConfirmDialog
         open={!!confirmState}
         title={confirmState?.action === "CONFIRMED" ? "Confirm this booking?" : "Reject this booking?"}
