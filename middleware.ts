@@ -18,12 +18,12 @@ export async function middleware(req: NextRequest) {
     const signInUrl = req.nextUrl.clone();
     signInUrl.pathname = "/signin";
   
-    // absolute URL (important)
-    signInUrl.searchParams.set("callbackUrl", req.nextUrl.href);
+    // Use pathname + search instead of href (relative URL)
+    const relativePath = req.nextUrl.pathname + req.nextUrl.search;
+    signInUrl.searchParams.set("callbackUrl", relativePath);
   
     return NextResponse.redirect(signInUrl);
   }
-  
 
   const role = token.role as string | undefined;
 
