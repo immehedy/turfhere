@@ -49,7 +49,18 @@ export const authOptions: NextAuthOptions = {
       (session.user as any).id = token.sub;
       return session;
     },
+    async redirect({ url, baseUrl }) {
+      // allow relative callback URLs
+      if (url.startsWith("/")) return `${baseUrl}${url}`;
+
+      // allow same-origin absolute URLs
+      if (url.startsWith(baseUrl)) return url;
+
+      // block external redirects
+      return baseUrl;
+    },
   },
+
   pages: {
     signIn: "/signin",
   },

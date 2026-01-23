@@ -14,7 +14,17 @@ export async function middleware(req: NextRequest) {
   if (!isAdminRoute && !isOwnerRoute) return NextResponse.next();
 
   const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
-  if (!token) return NextResponse.redirect(new URL("/signin", req.url));
+  if (!token) {
+    const signInUrl = req.nextUrl.clone();
+    signInUrl.pathname = "/signin";
+    
+    signInUrl.searchParams.set(
+      "callbackUrl",
+      req.nextUrl.pathname + req.nextUrl.search
+    );
+
+    return NextResponse.redirect(signInUrl);
+  }
 
   const role = token.role as string | undefined;
 

@@ -228,7 +228,7 @@ export default function VenuesClient() {
             </div>
 
             <Link
-              href="/register"
+              href="/owner/venues/new"
               className="rounded-lg bg-black text-white px-3 py-2 text-sm hover:opacity-90"
             >
               Register venue
