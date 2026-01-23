@@ -61,8 +61,8 @@ export default function HomePage() {
               </Link>
               <Link
                 className="rounded border px-4 py-2 hover:bg-gray-50"
-                href="/register">
-                Register as owner
+                href="/owner/venues/new">
+                Register venue
               </Link>
             </div>
           </div>
@@ -210,7 +210,7 @@ export default function HomePage() {
                   <div className="pt-2">
                     <Link
                       className="rounded bg-black text-white px-4 py-2 hover:opacity-90"
-                      href="/register">
+                      href="/owner">
                       Become an owner
                     </Link>
                   </div>

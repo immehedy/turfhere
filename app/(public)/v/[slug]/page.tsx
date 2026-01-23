@@ -1,5 +1,5 @@
+import VenueBookingClient from "@/components/booking/VenueBookingClient";
 import PageShell from "@/components/PageShell";
-import VenueBookingClient from "./venuBookingClient";
 
 async function getVenue(slug: string) {
   // IMPORTANT: if you moved slug route to /api/venues/slug/[slug], use that here:

@@ -17,7 +17,7 @@ function BrandLogo() {
   return (
     <Link href="/" className="group inline-flex items-center gap-2">
       <span className="leading-none">
-        <span className="block text-[15px] sm:text-xl font-semibold tracking-tight text-gray-900">
+        <span className="block text-[15px] sm:text-2xl font-semibold tracking-tight text-gray-900">
           <span className="font-extrabold">Turf</span>
           <span className="text-gray-500 font-medium">Here</span>
         </span>
@@ -149,7 +149,7 @@ export default function NavBar() {
   }, [isOwner]);
 
   return (
-    <header className="border-b bg-white/80 backdrop-blur supports-[backdrop-filter]:bg-white/70">
+    <header className="border-b bg-white/80 backdrop-blur supports-backdrop-filter:bg-white/70">
       {/* Top row */}
       <div className="mx-auto max-w-6xl px-4 py-3 flex items-center justify-between gap-3">
         <BrandLogo />
