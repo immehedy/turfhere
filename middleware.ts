@@ -17,14 +17,13 @@ export async function middleware(req: NextRequest) {
   if (!token) {
     const signInUrl = req.nextUrl.clone();
     signInUrl.pathname = "/signin";
-    
-    signInUrl.searchParams.set(
-      "callbackUrl",
-      req.nextUrl.pathname + req.nextUrl.search
-    );
-
+  
+    // absolute URL (important)
+    signInUrl.searchParams.set("callbackUrl", req.nextUrl.href);
+  
     return NextResponse.redirect(signInUrl);
   }
+  
 
   const role = token.role as string | undefined;
 

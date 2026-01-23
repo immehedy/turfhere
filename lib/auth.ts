@@ -50,16 +50,19 @@ export const authOptions: NextAuthOptions = {
       return session;
     },
     async redirect({ url, baseUrl }) {
-      // allow relative callback URLs
+      // allow relative
       if (url.startsWith("/")) return `${baseUrl}${url}`;
-
-      // allow same-origin absolute URLs
-      if (url.startsWith(baseUrl)) return url;
-
-      // block external redirects
+  
+      // allow same-origin absolute
+      try {
+        const u = new URL(url);
+        if (u.origin === baseUrl) return url;
+      } catch {}
+  
       return baseUrl;
     },
   },
+  
 
   pages: {
     signIn: "/signin",
