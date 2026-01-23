@@ -54,7 +54,7 @@ export default function OwnerCreateVenuePage() {
     [openingHours]
   );
 
-  // ✅ Auto slug from name until user edits slug manually
+  //Auto slug from name until user edits slug manually
   useEffect(() => {
     if (slugTouched) return;
     setSlug(slugify(name));
