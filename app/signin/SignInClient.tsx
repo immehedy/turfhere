@@ -3,19 +3,14 @@
 import Link from "next/link";
 import { useSearchParams, useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 
 export default function SignInClient() {
   const sp = useSearchParams();
   const router = useRouter();
-
-  const callbackUrl = useMemo(
-    () => sp.get("callbackUrl") ?? "/owner",
-    [sp]
-  );
+  const [loading, setLoading] = useState(false);
 
   const error = sp.get("error");
-  const [loading, setLoading] = useState(false);
 
   async function handleCredentials(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -24,13 +19,16 @@ export default function SignInClient() {
     const email = String(fd.get("email") ?? "");
     const password = String(fd.get("password") ?? "");
 
+    // Read callbackUrl HERE, not from useMemo
+    const callbackUrl = sp.get("callbackUrl") ?? "/owner";
+
     setLoading(true);
 
     const res = await signIn("credentials", {
       email,
       password,
       callbackUrl,
-      redirect: false, // important for loading + error handling
+      redirect: false,
     });
 
     setLoading(false);
@@ -38,8 +36,6 @@ export default function SignInClient() {
     if (res?.ok) {
       router.push(res.url ?? callbackUrl);
     } else {
-      // NextAuth will also set ?error=CredentialsSignin etc,
-      // but you can handle it here if you want
       router.push(`/signin?error=CredentialsSignin&callbackUrl=${encodeURIComponent(callbackUrl)}`);
     }
   }
