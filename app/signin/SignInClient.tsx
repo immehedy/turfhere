@@ -3,24 +3,26 @@
 import Link from "next/link";
 import { useSearchParams, useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 
 export default function SignInClient() {
   const sp = useSearchParams();
   const router = useRouter();
-  const [loading, setLoading] = useState(false);
+
+  // No window here
+  const callbackUrl = useMemo(
+    () => sp.get("callbackUrl") ?? "/owner/calender",
+    [sp]
+  );
 
   const error = sp.get("error");
+  const [loading, setLoading] = useState(false);
 
   async function handleCredentials(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
-
     const fd = new FormData(e.currentTarget);
     const email = String(fd.get("email") ?? "");
     const password = String(fd.get("password") ?? "");
-
-    // Read callbackUrl HERE, not from useMemo
-    const callbackUrl = sp.get("callbackUrl") ?? "/owner";
 
     setLoading(true);
 
@@ -36,7 +38,11 @@ export default function SignInClient() {
     if (res?.ok) {
       router.push(res.url ?? callbackUrl);
     } else {
-      router.push(`/signin?error=CredentialsSignin&callbackUrl=${encodeURIComponent(callbackUrl)}`);
+      router.push(
+        `/signin?error=CredentialsSignin&callbackUrl=${encodeURIComponent(
+          callbackUrl
+        )}`
+      );
     }
   }
 
