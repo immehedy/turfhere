@@ -151,7 +151,7 @@ export default function NavBar() {
   return (
     <header className="border-b bg-white/80 backdrop-blur supports-[backdrop-filter]:bg-white/70">
       {/* Top row */}
-      <div className="mx-auto max-w-6xl px-4 py-3 flex items-center justify-between gap-3">
+      <div className="mx-auto max-w-6xl px-2 py-3 flex items-center justify-between gap-3">
         <BrandLogo />
 
         <div className="flex items-center gap-2">

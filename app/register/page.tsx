@@ -54,7 +54,7 @@ export default function RegisterPage() {
 
   return (
     <PageShell>
-      <div className="max-w-md border rounded-lg p-5">
+      <div className="mx-auto max-w-md border rounded-lg p-5">
         <h1 className="text-xl font-semibold">Register</h1>
         <p className="text-sm text-gray-600 mt-1">Create a free account.</p>
 

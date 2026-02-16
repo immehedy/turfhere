@@ -5,7 +5,7 @@ const Footer = () => {
     <>
     {/* FOOTER */}
 <footer className="mt-16 border-t bg-gray-50">
-  <div className="max-w-7xl mx-auto px-4 py-10">
+  <div className="mx-auto max-w-6xl px-2 py-10">
     <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
       {/* Brand */}
       <div className="space-y-3">
