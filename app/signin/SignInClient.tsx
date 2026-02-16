@@ -47,7 +47,7 @@ export default function SignInClient() {
   }
 
   return (
-    <div className="max-w-md space-y-4">
+    <div className="mx-auto border rounded-lg p-5 max-w-md space-y-4">
       <div>
         <h1 className="text-xl font-semibold">Sign in</h1>
         <p className="text-sm text-gray-600 mt-1">
