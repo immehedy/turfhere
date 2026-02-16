@@ -72,7 +72,7 @@ export const venueCreateSchema = z
     area: z.string().max(80).optional(),
     address: z.string().max(200).optional(),
   
-    slotDurationMinutes: z.number().int().min(15).max(240),
+    slotDurationMinutes: z.number().int().min(15).max(1440),
     openingHours: openingHoursSchema,
   
     thumbnailUrl: urlSchema,

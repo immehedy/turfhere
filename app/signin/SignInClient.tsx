@@ -1,16 +1,21 @@
 "use client";
 
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
 import { useMemo, useState } from "react";
 
 export default function SignInClient() {
   const sp = useSearchParams();
+  const router = useRouter();
 
-  const callbackUrl = useMemo(() => sp.get("callbackUrl") ?? "/owner/calender", [sp]);
+  // No window here
+  const callbackUrl = useMemo(
+    () => sp.get("callbackUrl") ?? "/owner/calender",
+    [sp]
+  );
+
   const error = sp.get("error");
-
   const [loading, setLoading] = useState(false);
 
   async function handleCredentials(e: React.FormEvent<HTMLFormElement>) {
@@ -20,8 +25,25 @@ export default function SignInClient() {
     const password = String(fd.get("password") ?? "");
 
     setLoading(true);
-    await signIn("credentials", { email, password, callbackUrl });
+
+    const res = await signIn("credentials", {
+      email,
+      password,
+      callbackUrl,
+      redirect: false,
+    });
+
     setLoading(false);
+
+    if (res?.ok) {
+      router.push(res.url ?? callbackUrl);
+    } else {
+      router.push(
+        `/signin?error=CredentialsSignin&callbackUrl=${encodeURIComponent(
+          callbackUrl
+        )}`
+      );
+    }
   }
 
   return (
@@ -39,7 +61,6 @@ export default function SignInClient() {
         </p>
       )}
 
-      {/* Credentials sign-in */}
       <form onSubmit={handleCredentials} className="space-y-3">
         <div>
           <label className="text-sm">Email</label>

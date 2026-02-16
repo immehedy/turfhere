@@ -4,35 +4,36 @@ import PageShell from "@/components/PageShell";
 import { clientFetch } from "@/lib/clientFetch";
 import { uploadToCloudinary } from "@/lib/cloudinaryClient";
 import { useRouter } from "next/navigation";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
-type Weekday = "SUN" | "MON" | "TUE" | "WED" | "THU" | "FRI" | "SAT";
-const days: Weekday[] = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
+import VenueDetailsCard from "@/components/venue/VenueDetailsCard";
+import OpeningHoursCard from "@/components/venue/OpeningHoursCard";
+import LocationCard from "@/components/venue/LocationCard";
+import ImagesCard from "@/components/venue/ImagesCard";
 
-function defaultOpeningHours() {
-  const base = { open: "10:00", close: "22:00", closed: false };
-  return Object.fromEntries(days.map((d) => [d, { ...base }])) as any;
-}
-
-type UploadedImage = {
-  url: string;
-  publicId: string;
-};
+import { days, OpeningHours, UploadedImage, VenueType, Weekday } from "@/components/venue/venueTypes";
+import { defaultOpeningHours, slugify } from "@/components/venue/venueHelpers";
 
 export default function OwnerCreateVenuePage() {
   const router = useRouter();
 
-  const [type, setType] = useState<"TURF" | "EVENT_SPACE">("TURF");
+  // ---- form state
+  const [type, setType] = useState<VenueType>("TURF");
+
   const [name, setName] = useState("");
   const [slug, setSlug] = useState("");
+  const [slugTouched, setSlugTouched] = useState(false);
+
   const [description, setDescription] = useState("");
+
   const [city, setCity] = useState("");
   const [area, setArea] = useState("");
   const [address, setAddress] = useState("");
-  const [slotDurationMinutes, setSlotDurationMinutes] = useState(60);
-  const [openingHours, setOpeningHours] = useState<any>(defaultOpeningHours());
 
-  // ✅ Cloudinary images
+  const [slotDurationMinutes, setSlotDurationMinutes] = useState(60);
+  const [openingHours, setOpeningHours] = useState<OpeningHours>(defaultOpeningHours());
+
+  // ---- images
   const [images, setImages] = useState<UploadedImage[]>([]);
   const [thumbnailIndex, setThumbnailIndex] = useState(0);
 
@@ -47,15 +48,44 @@ export default function OwnerCreateVenuePage() {
   const [err, setErr] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  function setDay(
+  // ---- derived
+  const allClosed = useMemo(
+    () => days.every((d) => !!openingHours[d]?.closed),
+    [openingHours]
+  );
+
+  //Auto slug from name until user edits slug manually
+  useEffect(() => {
+    if (slugTouched) return;
+    setSlug(slugify(name));
+  }, [name, slugTouched]);
+
+  // ---- helpers
+  const resetSlug = () => {
+    setSlugTouched(false);
+    setSlug(slugify(name));
+  };
+
+  const setDay = (
     d: Weekday,
     patch: Partial<{ open: string; close: string; closed: boolean }>
-  ) {
-    setOpeningHours((prev: any) => ({
+  ) => {
+    setOpeningHours((prev) => ({
       ...prev,
       [d]: { ...prev[d], ...patch },
     }));
-  }
+  };
+
+  const toggleAllClosed = () => {
+    setOpeningHours((prev) => {
+      const next = { ...prev };
+      const shouldClose = !allClosed; // if not all closed -> close all, else open all
+      days.forEach((d) => {
+        next[d] = { ...next[d], closed: shouldClose };
+      });
+      return next;
+    });
+  };
 
   async function onPickFiles(e: React.ChangeEvent<HTMLInputElement>) {
     const files = Array.from(e.target.files ?? []);
@@ -67,7 +97,6 @@ export default function OwnerCreateVenuePage() {
 
     try {
       for (const file of files) {
-        // basic client checks (optional)
         if (!file.type.startsWith("image/")) continue;
         if (file.size > 8 * 1024 * 1024) {
           throw new Error(`Image too large: ${file.name} (max 8MB)`);
@@ -88,7 +117,6 @@ export default function OwnerCreateVenuePage() {
       setErr(e?.message ?? "Upload failed");
     } finally {
       setUploading(false);
-      // reset input so selecting same file again triggers change
       e.target.value = "";
     }
   }
@@ -130,7 +158,6 @@ export default function OwnerCreateVenuePage() {
         address: address || undefined,
         slotDurationMinutes,
         openingHours,
-
         thumbnailUrl,
         images: images.map((x) => x.url),
       }),
@@ -139,9 +166,7 @@ export default function OwnerCreateVenuePage() {
     setLoading(false);
 
     if (!res.ok) {
-      setErr(
-        typeof res.error === "string" ? res.error : "Failed to create venue"
-      );
+      setErr(typeof res.error === "string" ? res.error : "Failed to create venue");
       return;
     }
 
@@ -150,221 +175,100 @@ export default function OwnerCreateVenuePage() {
 
   return (
     <PageShell>
-      <h1 className="text-xl font-semibold">Create a venue</h1>
-
-      <form onSubmit={onSubmit} className="mt-4 space-y-4 max-w-3xl">
-        <div className="grid sm:grid-cols-2 gap-3">
+      <div className="mx-auto max-w-6xl">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <label className="text-sm">Type</label>
-            <select
-              className="mt-1 w-full border rounded px-3 py-2"
-              value={type}
-              onChange={(e) => setType(e.target.value as any)}>
-              <option value="TURF">Turf</option>
-              <option value="EVENT_SPACE">Event Space</option>
-            </select>
-          </div>
-
-          <div>
-            <label className="text-sm">Slot duration (minutes)</label>
-            <input
-              className="mt-1 w-full border rounded px-3 py-2"
-              type="number"
-              value={slotDurationMinutes}
-              onChange={(e) => setSlotDurationMinutes(Number(e.target.value))}
-              min={15}
-              max={240}
-              required
-            />
-          </div>
-
-          <div>
-            <label className="text-sm">Name</label>
-            <input
-              className="mt-1 w-full border rounded px-3 py-2"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              required
-            />
-          </div>
-
-          <div>
-            <label className="text-sm">Slug (unique)</label>
-            <input
-              className="mt-1 w-full border rounded px-3 py-2"
-              value={slug}
-              onChange={(e) => setSlug(e.target.value)}
-              placeholder="e.g. gulshan-turf-1"
-              required
-            />
-          </div>
-        </div>
-
-        <div>
-          <label className="text-sm">Description</label>
-          <textarea
-            className="mt-1 w-full border rounded px-3 py-2"
-            rows={3}
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-          />
-        </div>
-
-        <div className="grid sm:grid-cols-3 gap-3">
-          <div>
-            <label className="text-sm">City</label>
-            <input
-              className="mt-1 w-full border rounded px-3 py-2"
-              value={city}
-              onChange={(e) => setCity(e.target.value)}
-              placeholder="e.g. Dhaka"
-            />
-          </div>
-
-          <div>
-            <label className="text-sm">Area</label>
-            <input
-              className="mt-1 w-full border rounded px-3 py-2"
-              value={area}
-              onChange={(e) => setArea(e.target.value)}
-              placeholder="e.g. Gulshan"
-            />
-          </div>
-
-          <div>
-            <label className="text-sm">Address</label>
-            <input
-              className="mt-1 w-full border rounded px-3 py-2"
-              value={address}
-              onChange={(e) => setAddress(e.target.value)}
-              placeholder="Street / building / landmark"
-            />
-          </div>
-        </div>
-
-        {/* ✅ Cloudinary images */}
-        <div className="border rounded-lg p-4 space-y-3">
-          <div className="flex items-start justify-between gap-3">
-            <div>
-              <h2 className="font-semibold">Images</h2>
-              <p className="text-sm text-gray-600 mt-1">
-                Upload multiple images. Select one as thumbnail.
-              </p>
-            </div>
-
-            <label className="rounded border px-3 py-2 hover:bg-gray-50 cursor-pointer">
-              <input
-                type="file"
-                accept="image/*"
-                multiple
-                className="hidden"
-                onChange={onPickFiles}
-                disabled={uploading}
-              />
-              {uploading ? "Uploading…" : "Upload images"}
-            </label>
-          </div>
-
-          {uploadMsg && <p className="text-sm text-gray-700">{uploadMsg}</p>}
-
-          {images.length === 0 ? (
-            <p className="text-sm text-gray-600">No images uploaded yet.</p>
-          ) : (
-            <div className="grid gap-3 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4">
-              {images.map((img, i) => (
-                <div
-                  key={img.publicId}
-                  className="border rounded-lg overflow-hidden">
-                  <div className="relative">
-                    <img
-                      src={img.url}
-                      alt="uploaded"
-                      className="w-full h-28 object-cover"
-                    />
-                  </div>
-
-                  <div className="p-2 flex items-center justify-between gap-2">
-                    <label className="text-xs flex items-center gap-2">
-                      <input
-                        type="radio"
-                        name="thumbnail"
-                        checked={thumbnailIndex === i}
-                        onChange={() => setThumbnailIndex(i)}
-                      />
-                      Thumbnail
-                    </label>
-
-                    <button
-                      type="button"
-                      className="text-xs rounded border px-2 py-1 hover:bg-gray-50"
-                      onClick={() => removeImage(i)}
-                      disabled={uploading}>
-                      Remove
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-
-          {images.length > 0 && (
-            <p className="text-xs text-gray-500">
-              Thumbnail URL saved as:{" "}
-              <span className="font-mono">{thumbnailUrl}</span>
+            <h1 className="text-2xl font-semibold tracking-tight text-gray-900">
+              Create a venue
+            </h1>
+            <p className="mt-1 text-sm text-gray-600">
+              Fill details, upload photos, and set weekly hours.
             </p>
-          )}
-        </div>
-
-        {/* Opening hours */}
-        <div className="border rounded-lg p-4">
-          <h2 className="font-semibold">Opening hours (weekly)</h2>
-          <p className="text-sm text-gray-600 mt-1">
-            Times are in HH:MM format (simple MVP).
-          </p>
-
-          <div className="mt-3 space-y-2">
-            {days.map((d) => (
-              <div
-                key={d}
-                className="grid grid-cols-1 sm:grid-cols-5 gap-2 items-center border-b pb-2">
-                <div className="font-medium">{d}</div>
-
-                <label className="flex items-center gap-2 text-sm">
-                  <input
-                    type="checkbox"
-                    checked={!!openingHours[d]?.closed}
-                    onChange={(e) => setDay(d, { closed: e.target.checked })}
-                  />
-                  Closed
-                </label>
-
-                <input
-                  className="w-full border rounded px-3 py-2"
-                  value={openingHours[d]?.open ?? "10:00"}
-                  onChange={(e) => setDay(d, { open: e.target.value })}
-                  disabled={openingHours[d]?.closed}
-                />
-                <input
-                  className="w-full border rounded px-3 py-2"
-                  value={openingHours[d]?.close ?? "22:00"}
-                  onChange={(e) => setDay(d, { close: e.target.value })}
-                  disabled={openingHours[d]?.closed}
-                />
-
-                <div className="text-xs text-gray-600">open → close</div>
-              </div>
-            ))}
           </div>
+
+          <button
+            disabled={loading || uploading}
+            form="create-venue-form"
+            type="submit"
+            className="inline-flex h-11 items-center justify-center rounded-2xl bg-black px-5 text-sm font-medium text-white shadow-sm disabled:opacity-50"
+          >
+            {loading ? "Creating…" : "Create venue"}
+          </button>
         </div>
 
-        {err && <p className="text-sm text-red-600">{err}</p>}
+        <form
+          id="create-venue-form"
+          onSubmit={onSubmit}
+          className="mt-6 grid gap-6 lg:grid-cols-12 lg:items-start"
+        >
+          {/* LEFT column (desktop) */}
+          <div className="grid gap-6 lg:col-span-8">
+            <VenueDetailsCard
+              type={type}
+              setType={setType}
+              slotDurationMinutes={slotDurationMinutes}
+              setSlotDurationMinutes={setSlotDurationMinutes}
+              name={name}
+              setName={setName}
+              slug={slug}
+              setSlug={setSlug}
+              slugTouched={slugTouched}
+              setSlugTouched={setSlugTouched}
+              resetSlug={resetSlug}
+              description={description}
+              setDescription={setDescription}
+            />
 
-        <button
-          disabled={loading || uploading}
-          className="rounded bg-black text-white px-4 py-2 disabled:opacity-50">
-          {loading ? "Creating…" : "Create venue"}
-        </button>
-      </form>
+            <OpeningHoursCard
+              openingHours={openingHours}
+              allClosed={allClosed}
+              toggleAllClosed={toggleAllClosed}
+              setDay={setDay}
+            />
+          </div>
+
+          {/* RIGHT column (desktop) */}
+          <div className="grid gap-6 lg:col-span-4 lg:self-start lg:sticky lg:top-6">
+            <LocationCard
+              city={city}
+              setCity={setCity}
+              area={area}
+              setArea={setArea}
+              address={address}
+              setAddress={setAddress}
+            />
+
+            <ImagesCard
+              images={images}
+              thumbnailIndex={thumbnailIndex}
+              setThumbnailIndex={setThumbnailIndex}
+              uploading={uploading}
+              uploadMsg={uploadMsg}
+              onPickFiles={onPickFiles}
+              removeImage={removeImage}
+              thumbnailUrl={thumbnailUrl}
+            />
+
+            {err && (
+              <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                {err}
+              </div>
+            )}
+          </div>
+        </form>
+
+        {/* bottom action (mobile friendly) */}
+        <div className="mt-6 lg:hidden">
+          <button
+            disabled={loading || uploading}
+            form="create-venue-form"
+            type="submit"
+            className="w-full rounded-2xl bg-black px-4 py-3 text-sm font-medium text-white shadow-sm disabled:opacity-50"
+          >
+            {loading ? "Creating…" : "Create venue"}
+          </button>
+        </div>
+      </div>
     </PageShell>
   );
 }
